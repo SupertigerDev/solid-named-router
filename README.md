@@ -4,6 +4,8 @@
 
 # Solid Named Router
 
+[![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-cc00ff.svg?style=for-the-badge&logo=pnpm)](https://pnpm.io/)
+
 A third party router library for solidjs. Includes named routes inspired by vuejs.   
 This router relies on the [route-parser](https://www.npmjs.com/package/route-parser) package.   
 Note: this library is not complete. Please contribute and submit a PR to improve this library 💖

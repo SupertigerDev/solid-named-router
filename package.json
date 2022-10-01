@@ -1,17 +1,17 @@
 {
-  "version": "0.0.0",
-  "name": "{{name_of_lib}}",
-  "description": "{{desc_of_lib}}",
+  "version": "0.0.1",
+  "name": "solid-named-router",
+  "description": "A third party router library for solidjs.",
   "license": "MIT",
-  "author": "{{me}}",
+  "author": "Supertiger",
   "contributors": [],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/{{me}}/{{name_of_lib}}.git"
+    "url": "git+https://github.com/Supertigerr/solid-named-router.git"
   },
-  "homepage": "https://github.com/{{me}}/{{name_of_lib}}#readme",
+  "homepage": "https://github.com/Supertigerr/solid-named-router#readme",
   "bugs": {
-    "url": "https://github.com/{{me}}/{{name_of_lib}}/issues"
+    "url": "https://github.com/Supertigerr/solid-named-router/issues"
   },
   "private": false,
   "sideEffects": false,
@@ -43,17 +43,20 @@
     "update-deps": "taze -w && pnpm i",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {},
+  "dependencies": {
+    "route-parser": "^0.0.5"
+  },
   "peerDependencies": {
     "solid-js": ">=1.0.0"
   },
   "devDependencies": {
+    "@types/route-parser": "^0.1.4",
     "prettier": "2.7.1",
     "rollup": "^2.77.2",
     "rollup-preset-solid": "^1.4.0",
-    "typescript": "^4.7.4",
     "solid-js": "^1.4.8",
     "taze": "^0.7.6",
+    "typescript": "^4.7.4",
     "vite": "^3.0.4",
     "vite-plugin-solid": "^2.3.0"
   },

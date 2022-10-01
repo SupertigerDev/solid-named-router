@@ -1,30 +1,29 @@
-import { createMemo, createSignal, For, getOwner, JSX, Owner, runWithOwner, Show, } from 'solid-js';
-import RouteParser from 'route-parser';
-import { guardEvent, removeTrailingSlash } from './utils';
+import { createMemo, createSignal, For, getOwner, JSX, Owner, runWithOwner, Show } from "solid-js";
+import RouteParser from "route-parser";
+import { guardEvent, removeTrailingSlash } from "./utils";
 
 interface RouteOptions {
   name?: string;
   path: string;
-  element?: JSX.Element
-  routes?: Omit<RouteOptions, 'routes'>[]
+  element?: JSX.Element;
+  routes?: Omit<RouteOptions, "routes">[];
 }
 
 interface RouterOptions {
-  routes: RouteOptions[]
+  routes: RouteOptions[];
 }
 
 const createLocation = () => {
   const [path, setPath] = createSignal(window.location.pathname);
 
-
   const set = (_path: string, pushState = true) => {
     if (path() === _path) return;
     setPath(_path);
     pushState && window.history.pushState(history.state, "", _path);
-  }
+  };
 
   return { setPath: set, path };
-}
+};
 
 const createNamedRoutes = () => {
   let namedRoutes: Record<string, string> = {};
@@ -35,7 +34,7 @@ const createNamedRoutes = () => {
       const route = routes[i];
       if (!route.routes?.length && route.name) {
         if (namedRoutes[route.name]) {
-          console.warn("Duplicate", route.name, "found.")
+          console.warn("Duplicate", route.name, "found.");
         }
         namedRoutes[route.name] = removeTrailingSlash(route.path);
         continue;
@@ -45,23 +44,22 @@ const createNamedRoutes = () => {
         const routeY = route.routes[y];
         if (routeY.name) {
           if (namedRoutes[routeY.name]) {
-            console.warn("Duplicate", routeY.name, "found.")
+            console.warn("Duplicate", routeY.name, "found.");
           }
           namedRoutes[routeY.name] = removeTrailingSlash(route.path + routeY.path);
         }
       }
     }
-  }
+  };
   const removeAll = () => {
     namedRoutes = {};
-  }
+  };
   const getRoute = (name: string) => namedRoutes[name];
-
 
   type ParseOverloads = {
     (path: string): string;
     (to: { name: string; params?: Record<string, string> }): string;
-  }
+  };
 
   const parse: ParseOverloads = (parseOpts: any) => {
     if (typeof parseOpts === "string") {
@@ -69,14 +67,14 @@ const createNamedRoutes = () => {
       return path;
     }
     if (!getRoute(parseOpts.name)) {
-      throw new Error(`${parseOpts.name} Route does not exist!`)
+      throw new Error(`${parseOpts.name} Route does not exist!`);
     }
     const parser = new RouteParser(getRoute(parseOpts.name));
     return parser.reverse(parseOpts.params || {}) as string;
-  }
+  };
 
-  return { setRoutes, getRoute, removeAll, parse }
-}
+  return { setRoutes, getRoute, removeAll, parse };
+};
 const location = createLocation();
 const namedRoutes = createNamedRoutes();
 let routes: RouteOptions[] | null = null;
@@ -84,68 +82,66 @@ const [ready, setReady] = createSignal<boolean>(false);
 
 type NavigateOverloads = {
   (path: string): void;
-  (opts: { name: string, params?: Record<string, any> }): void;
-}
+  (opts: { name: string; params?: Record<string, any> }): void;
+};
 
 export const navigate: NavigateOverloads = (opts: any) => {
   location.setPath(namedRoutes.parse(opts));
-}
+};
 
 export const createRouter = (opts: RouterOptions) => {
-    routes = opts.routes;
-    namedRoutes.setRoutes(opts.routes);
-    setReady(true);
+  routes = opts.routes;
+  namedRoutes.setRoutes(opts.routes);
+  setReady(true);
 
-    window.onpopstate = function (e) {
-      location.setPath(window.location.pathname, false);
-    };
-    
-    return (props: {children: JSX.Element}) => <Show when={ready()}>{props.children}</Show>;
-    
-}
+  window.onpopstate = function (e) {
+    location.setPath(window.location.pathname, false);
+  };
+
+  return (props: { children: JSX.Element }) => <Show when={ready()}>{props.children}</Show>;
+};
 
 let owner: Owner | null = null;
 export const RouterView = () => {
   owner = getOwner();
   return (
     <Show when={ready}>
-      <For each={routes}>
-        {route => <Route route={route} />}
-      </For>
+      <For each={routes}>{(route) => <Route route={route} />}</For>
     </Show>
-  )
-}
+  );
+};
 
 export const useNamedRoute = () => {
-  return runWithOwner(owner!, () => createMemo(() => {
-    if (!ready()) return; 
-    for (let i = 0; i < routes!.length; i++) {
-      const route = routes![i];
-      if (!route.routes?.length) {
-        const parser = new RouteParser(removeTrailingSlash(route.path));
-        const match = parser.match(removeTrailingSlash(location.path()));
-        if (match !== false) return {name: route.name, params: match};
-        continue;
+  return runWithOwner(owner!, () =>
+    createMemo(() => {
+      if (!ready()) return;
+      for (let i = 0; i < routes!.length; i++) {
+        const route = routes![i];
+        if (!route.routes?.length) {
+          const parser = new RouteParser(removeTrailingSlash(route.path));
+          const match = parser.match(removeTrailingSlash(location.path()));
+          if (match !== false) return { name: route.name, params: match };
+          continue;
+        }
+        if (!route.routes?.length) continue;
+        for (let y = 0; y < route.routes.length; y++) {
+          const routeY = route.routes[y];
+          const fullPath = removeTrailingSlash(route.path + routeY.path);
+          const parser = new RouteParser(removeTrailingSlash(fullPath));
+          const match = parser.match(removeTrailingSlash(location.path()));
+          // console.log(match !== false, fullPath, location.path(), routeY.name)
+          if (match !== false) return { name: routeY.name, params: match };
+        }
       }
-      if (!route.routes?.length) continue;
-      for (let y = 0; y < route.routes.length; y++) {
-        const routeY = route.routes[y];
-        const fullPath = removeTrailingSlash(route.path + routeY.path);
-        const parser = new RouteParser(removeTrailingSlash(fullPath));
-        const match = parser.match(removeTrailingSlash(location.path()));
-        // console.log(match !== false, fullPath, location.path(), routeY.name)
-        if (match !== false) return {name: routeY.name, params: match};
-      }
-    }
-  }));
-}
+    }),
+  );
+};
 
 const Route = (props: { route: RouteOptions }) => {
-
   const matches = () => {
     const currentPath = removeTrailingSlash(location.path());
     if (!props.route.routes?.length) {
-      const parser = new RouteParser(removeTrailingSlash(props.route.path))
+      const parser = new RouteParser(removeTrailingSlash(props.route.path));
       const match = parser.match(currentPath);
       return match !== false;
     }
@@ -153,21 +149,19 @@ const Route = (props: { route: RouteOptions }) => {
       const route = props.route.routes[i];
       const fullPath = removeTrailingSlash(props.route.path + route.path);
 
-      const parser = new RouteParser(fullPath)
+      const parser = new RouteParser(fullPath);
       const match = parser.match(currentPath);
       if (match !== false) return true;
     }
-  }
+  };
 
   return <Show when={matches()}>{props.route.element}</Show>;
-}
+};
 
-
-
-type LinkProps = { 
-  children?: JSX.Element,
-  onClick?: (event: MouseEvent) => void; 
-} & ({ to: string; } | { to: { name: string, params?: Record<string, any> } })
+type LinkProps = {
+  children?: JSX.Element;
+  onClick?: (event: MouseEvent) => void;
+} & ({ to: string } | { to: { name: string; params?: Record<string, any> } });
 
 export const Link = (props: LinkProps) => {
   const path = () => {
@@ -179,7 +173,6 @@ export const Link = (props: LinkProps) => {
     if (guardEvent(event)) {
       location.setPath(path());
     }
-  }
-  return <a {...{...props as any, onClick}} href={path()} />
-}
-
+  };
+  return <a {...{ ...(props as any), onClick }} href={path()} />;
+};

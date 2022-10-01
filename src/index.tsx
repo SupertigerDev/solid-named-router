@@ -1,7 +1,1 @@
-export {
-  createRouter,
-  navigate,
-  Link,
-  RouterView,
-  useNamedRoute
-} from './components';
+export { createRouter, navigate, Link, RouterView, useNamedRoute } from "./components";

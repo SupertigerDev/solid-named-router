@@ -8,7 +8,7 @@
 
 A third party router library for solidjs. Includes named routes inspired by vuejs.   
 This router relies on the [route-parser](https://www.npmjs.com/package/route-parser) package.   
-Note: this library is not complete. Please contribute and submit a PR to improve this library 💖
+Note: This library is not complete. Please contribute and submit PRs to improve this library 💖
 
 ## Quick start
 
@@ -31,6 +31,11 @@ const Router = createRouter({
       name: 'Home',
       path: '/',
       element: () => <div>Home</div>
+    },
+    {
+      name: 'Users',
+      path: '/users/:userId',
+      element: () => <div>Users</div>
     },
   ]
 });
@@ -61,12 +66,12 @@ const App = () => {
 ## Methods & Hooks
 ### Link
 ```tsx
-<Link to={{name: 'users', params: {}}}>User</Link>
+<Link to={{name: 'Users', params: {userId: 1234}}}>User</Link>
 <Link to='app/users/1234'>User</Link>
 ```
 ### navigate
 ```ts
-navigate({name: 'users', params: {}})
+navigate({name: 'Users', params: {userId: 1234}})
 navigate('app/users/1234')
 ```
 

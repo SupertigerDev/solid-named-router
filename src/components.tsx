@@ -1,7 +1,7 @@
 import { createComputed, createSignal, For, JSX, Show } from "solid-js";
 import RouteParser from "route-parser";
 import { guardEvent, removeTrailingSlash } from "./utils";
-import {createStore, reconcile} from 'solid-js/store';
+import { createStore, reconcile } from "solid-js/store";
 
 interface RouteOptions {
   name?: string;
@@ -14,7 +14,9 @@ interface RouterOptions {
   routes: RouteOptions[];
 }
 
-const [namedRoute, setNamedRoute] = createStore<{name?: string, params: Record<string, any>}>({params: {}})
+const [namedRoute, setNamedRoute] = createStore<{ name?: string; params: Record<string, any> }>({
+  params: {},
+});
 
 const createLocation = () => {
   const [path, setPath] = createSignal(window.location.pathname);
@@ -91,7 +93,7 @@ type NavigateOverloads = {
 export const navigate: NavigateOverloads = (opts: any) => {
   const path = namedRoutes.parse(opts);
   if (path === false) {
-    throw new Error("Invalid path")
+    throw new Error("Invalid path");
   }
   location.setPath(path);
 };
@@ -116,8 +118,6 @@ export const RouterView = () => {
   );
 };
 
-
-
 createComputed(() => {
   if (!ready()) return;
   for (let i = 0; i < routes!.length; i++) {
@@ -138,13 +138,12 @@ createComputed(() => {
       if (match !== false) return setNamedRoute(reconcile({ name: routeY.name, params: match }));
     }
   }
-  setNamedRoute(reconcile({params: {}}));
-})
+  setNamedRoute(reconcile({ params: {} }));
+});
 
 export function useNamedRoute<T = Record<string, any>>() {
-  return namedRoute as {name?: string, params: T};
+  return namedRoute as { name?: string; params: T };
 }
-
 
 const Route = (props: { route: RouteOptions }) => {
   const matches = () => {

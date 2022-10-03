@@ -31,7 +31,7 @@ const Router = createRouter({
 
 const MainApp = () => {
   const namedRoute = useNamedRoute();
-  return <div style="white-space: pre;">{JSON.stringify(namedRoute(), null, 2)}</div>;
+  return <div style="white-space: pre;">{JSON.stringify(namedRoute, null, 2)}</div>;
 };
 
 render(

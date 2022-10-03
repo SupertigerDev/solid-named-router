@@ -80,7 +80,7 @@ navigate('app/users/1234')
 const namedRoute = useNamedRoute(); // -> {name, params};
 
 <div>
-  <div>name: {namedRoute()?.name}</div>
-  <div>params: {namedRoute()?.params.userId}</div>
+  <div>name: {namedRoute.name}</div>
+  <div>params: {namedRoute.params.userId}</div>
 </div>
 ```

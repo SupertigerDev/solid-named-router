@@ -1,6 +1,7 @@
-import { createMemo, createSignal, For, getOwner, JSX, Owner, runWithOwner, Show } from "solid-js";
+import { createComputed, createSignal, For, JSX, Show } from "solid-js";
 import RouteParser from "route-parser";
 import { guardEvent, removeTrailingSlash } from "./utils";
+import {createStore, reconcile} from 'solid-js/store';
 
 interface RouteOptions {
   name?: string;
@@ -12,6 +13,8 @@ interface RouteOptions {
 interface RouterOptions {
   routes: RouteOptions[];
 }
+
+const [namedRoute, setNamedRoute] = createStore<{name?: string, params: Record<string, any>}>({params: {}})
 
 const createLocation = () => {
   const [path, setPath] = createSignal(window.location.pathname);
@@ -57,8 +60,8 @@ const createNamedRoutes = () => {
   const getRoute = (name: string) => namedRoutes[name];
 
   type ParseOverloads = {
-    (path: string): string;
-    (to: { name: string; params?: Record<string, string> }): string;
+    (path: string): string | false;
+    (to: { name: string; params?: Record<string, string> }): string | false;
   };
 
   const parse: ParseOverloads = (parseOpts: any) => {
@@ -70,7 +73,7 @@ const createNamedRoutes = () => {
       throw new Error(`${parseOpts.name} Route does not exist!`);
     }
     const parser = new RouteParser(getRoute(parseOpts.name));
-    return parser.reverse(parseOpts.params || {}) as string;
+    return parser.reverse(parseOpts.params || {});
   };
 
   return { setRoutes, getRoute, removeAll, parse };
@@ -86,7 +89,11 @@ type NavigateOverloads = {
 };
 
 export const navigate: NavigateOverloads = (opts: any) => {
-  location.setPath(namedRoutes.parse(opts));
+  const path = namedRoutes.parse(opts);
+  if (path === false) {
+    throw new Error("Invalid path")
+  }
+  location.setPath(path);
 };
 
 export const createRouter = (opts: RouterOptions) => {
@@ -101,9 +108,7 @@ export const createRouter = (opts: RouterOptions) => {
   return (props: { children: JSX.Element }) => <Show when={ready()}>{props.children}</Show>;
 };
 
-let owner: Owner | null = null;
 export const RouterView = () => {
-  owner = getOwner();
   return (
     <Show when={ready}>
       <For each={routes}>{(route) => <Route route={route} />}</For>
@@ -111,31 +116,35 @@ export const RouterView = () => {
   );
 };
 
-export const useNamedRoute = () => {
-  return runWithOwner(owner!, () =>
-    createMemo(() => {
-      if (!ready()) return;
-      for (let i = 0; i < routes!.length; i++) {
-        const route = routes![i];
-        if (!route.routes?.length) {
-          const parser = new RouteParser(removeTrailingSlash(route.path));
-          const match = parser.match(removeTrailingSlash(location.path()));
-          if (match !== false) return { name: route.name, params: match };
-          continue;
-        }
-        if (!route.routes?.length) continue;
-        for (let y = 0; y < route.routes.length; y++) {
-          const routeY = route.routes[y];
-          const fullPath = removeTrailingSlash(route.path + routeY.path);
-          const parser = new RouteParser(removeTrailingSlash(fullPath));
-          const match = parser.match(removeTrailingSlash(location.path()));
-          // console.log(match !== false, fullPath, location.path(), routeY.name)
-          if (match !== false) return { name: routeY.name, params: match };
-        }
-      }
-    }),
-  );
-};
+
+
+createComputed(() => {
+  if (!ready()) return;
+  for (let i = 0; i < routes!.length; i++) {
+    const route = routes![i];
+    if (!route.routes?.length) {
+      const parser = new RouteParser(removeTrailingSlash(route.path));
+      const match = parser.match(removeTrailingSlash(location.path()));
+      if (match !== false) return setNamedRoute(reconcile({ name: route.name, params: match }));
+      continue;
+    }
+    if (!route.routes?.length) continue;
+    for (let y = 0; y < route.routes.length; y++) {
+      const routeY = route.routes[y];
+      const fullPath = removeTrailingSlash(route.path + routeY.path);
+      const parser = new RouteParser(removeTrailingSlash(fullPath));
+      const match = parser.match(removeTrailingSlash(location.path()));
+      // console.log(match !== false, fullPath, location.path(), routeY.name)
+      if (match !== false) return setNamedRoute(reconcile({ name: routeY.name, params: match }));
+    }
+  }
+  setNamedRoute(reconcile({params: {}}));
+})
+
+export function useNamedRoute<T = Record<string, any>>() {
+  return namedRoute as {name?: string, params: T};
+}
+
 
 const Route = (props: { route: RouteOptions }) => {
   const matches = () => {
@@ -167,11 +176,14 @@ export const Link = (props: LinkProps) => {
   const path = () => {
     return namedRoutes.parse(props.to as any);
   };
+  if (path() === false) {
+    throw new Error("Invalid Link path");
+  }
   const onClick = (event: MouseEvent) => {
     props.onClick?.(event);
 
     if (guardEvent(event)) {
-      location.setPath(path());
+      location.setPath(path() as string);
     }
   };
   return <a {...{ ...(props as any), onClick }} href={path()} />;

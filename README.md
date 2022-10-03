@@ -84,3 +84,11 @@ const namedRoute = useNamedRoute(); // -> {name, params};
   <div>params: {namedRoute.params.userId}</div>
 </div>
 ```
+### useParams
+```ts
+const params = useParams(); // -> {userId};
+
+<div>
+  <div>name: {params.userId}</div>
+</div>
+```

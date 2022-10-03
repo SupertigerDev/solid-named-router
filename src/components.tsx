@@ -144,6 +144,9 @@ createComputed(() => {
 export function useNamedRoute<T = Record<string, any>>() {
   return namedRoute as { name?: string; params: T };
 }
+export function useParams<T = Record<string, any>>() {
+  return namedRoute.params as T;
+}
 
 const Route = (props: { route: RouteOptions }) => {
   const matches = () => {

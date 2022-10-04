@@ -92,3 +92,27 @@ const params = useParams(); // -> {userId};
   <div>name: {params.userId}</div>
 </div>
 ```
+
+## Outlet Example
+```tsx
+
+const Router = createRouter({
+  routes: [
+    {
+      name: 'Users',
+      path: '/users/:userId',
+      elements: {
+        drawer: () => <div>Drawer Here</div>,
+        content: () => <div>Content Here</div>
+      },
+      element: () => (
+        <div>
+          <Outlet name="drawer">
+          <Outlet name="content">
+        </div>
+      ),
+    },
+  ]
+});
+```
+

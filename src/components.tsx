@@ -3,11 +3,20 @@ import RouteParser from "route-parser";
 import { guardEvent, removeTrailingSlash } from "./utils";
 import { createStore, reconcile } from "solid-js/store";
 
-interface RouteOptions {
+
+type OneOf<T extends Record<string, unknown>> = {
+  [K in keyof T]: Record<K, T[K]> &
+    {[U in Exclude<keyof T, K>]?: T[U]}
+}[keyof T]
+
+
+
+type RouteOptions = {
   name?: string;
   path: string;
-  element?: JSX.Element;
-  routes?: Omit<RouteOptions, "routes">[];
+  element?: JSX.Element
+  elements?: Record<string, JSX.Element>
+  routes?: (Omit<RouteOptions, "routes">)[];
 }
 
 interface RouterOptions {
@@ -17,6 +26,10 @@ interface RouterOptions {
 const [namedRoute, setNamedRoute] = createStore<{ name?: string; params: Record<string, any> }>({
   params: {},
 });
+
+const [currentRoute, setCurrentRoute] = createSignal<null | RouteOptions>(null);
+
+
 
 const createLocation = () => {
   const [path, setPath] = createSignal(window.location.pathname);
@@ -118,6 +131,20 @@ export const RouterView = () => {
   );
 };
 
+export const Outlet = (props: {name?: string}) => {
+  return (
+    <>
+      <Show when={!props.name && currentRoute()?.element}>
+        {currentRoute()?.element}
+      </Show>
+      <Show when={props.name && currentRoute()?.elements?.[props.name]}>
+        {currentRoute()?.elements?.[props.name!]}
+      </Show>
+    </>
+  )
+}
+
+
 createComputed(() => {
   if (!ready()) return;
   for (let i = 0; i < routes!.length; i++) {
@@ -125,7 +152,10 @@ createComputed(() => {
     if (!route.routes?.length) {
       const parser = new RouteParser(removeTrailingSlash(route.path));
       const match = parser.match(removeTrailingSlash(location.path()));
-      if (match !== false) return setNamedRoute(reconcile({ name: route.name, params: match }));
+      if (match !== false) {
+        setCurrentRoute(route);
+        return setNamedRoute(reconcile({ name: route.name, params: match }));
+      }
       continue;
     }
     if (!route.routes?.length) continue;
@@ -135,7 +165,10 @@ createComputed(() => {
       const parser = new RouteParser(removeTrailingSlash(fullPath));
       const match = parser.match(removeTrailingSlash(location.path()));
       // console.log(match !== false, fullPath, location.path(), routeY.name)
-      if (match !== false) return setNamedRoute(reconcile({ name: routeY.name, params: match }));
+      if (match !== false) {
+        setCurrentRoute(routeY);
+        return setNamedRoute(reconcile({ name: routeY.name, params: match }));
+      }
     }
   }
   setNamedRoute(reconcile({ params: {} }));

@@ -93,7 +93,7 @@ const params = useParams(); // -> {userId};
 </div>
 ```
 
-## Outlet Example
+### Outlet Example
 ```tsx
 
 const Router = createRouter({

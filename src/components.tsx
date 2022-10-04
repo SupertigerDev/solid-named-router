@@ -3,21 +3,17 @@ import RouteParser from "route-parser";
 import { guardEvent, removeTrailingSlash } from "./utils";
 import { createStore, reconcile } from "solid-js/store";
 
-
 type OneOf<T extends Record<string, unknown>> = {
-  [K in keyof T]: Record<K, T[K]> &
-    {[U in Exclude<keyof T, K>]?: T[U]}
-}[keyof T]
-
-
+  [K in keyof T]: Record<K, T[K]> & { [U in Exclude<keyof T, K>]?: T[U] };
+}[keyof T];
 
 type RouteOptions = {
   name?: string;
   path: string;
-  element?: JSX.Element
-  elements?: Record<string, JSX.Element>
-  routes?: (Omit<RouteOptions, "routes">)[];
-}
+  element?: JSX.Element;
+  elements?: Record<string, JSX.Element>;
+  routes?: Omit<RouteOptions, "routes">[];
+};
 
 interface RouterOptions {
   routes: RouteOptions[];
@@ -28,8 +24,6 @@ const [namedRoute, setNamedRoute] = createStore<{ name?: string; params: Record<
 });
 
 const [currentRoute, setCurrentRoute] = createSignal<null | RouteOptions>(null);
-
-
 
 const createLocation = () => {
   const [path, setPath] = createSignal(window.location.pathname);
@@ -131,19 +125,16 @@ export const RouterView = () => {
   );
 };
 
-export const Outlet = (props: {name?: string}) => {
+export const Outlet = (props: { name?: string }) => {
   return (
     <>
-      <Show when={!props.name && currentRoute()?.element}>
-        {currentRoute()?.element}
-      </Show>
+      <Show when={!props.name && currentRoute()?.element}>{currentRoute()?.element}</Show>
       <Show when={props.name && currentRoute()?.elements?.[props.name]}>
         {currentRoute()?.elements?.[props.name!]}
       </Show>
     </>
-  )
-}
-
+  );
+};
 
 createComputed(() => {
   if (!ready()) return;

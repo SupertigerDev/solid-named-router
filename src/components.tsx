@@ -188,5 +188,5 @@ export const Link = (props: LinkProps) => {
       location.setPath(path() as string);
     }
   };
-  return <a {...{ ...(props as any), onClick }} href={path()} />;
+  return <a {...{ ...(props as any), onClick, to: undefined }} href={path()} />;
 };

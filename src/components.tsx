@@ -115,7 +115,6 @@ export const createRouter = (opts: RouterOptions) => {
   };
 
   return (props: { children: JSX.Element }) => {
-
     createComputed(() => {
       if (!ready()) return;
       for (let i = 0; i < routes!.length; i++) {
@@ -145,36 +144,31 @@ export const createRouter = (opts: RouterOptions) => {
       setNamedRoute(reconcile({ params: {} }));
     });
 
-
-    return <Show when={ready()}>{props.children}</Show>
+    return <Show when={ready()}>{props.children}</Show>;
   };
 };
 
 export const RouterView = () => {
+  const matchedRoute = createMemo(() =>
+    routes?.find((route) => {
+      const currentPath = removeTrailingSlash(location.path());
+      if (!route.routes?.length) {
+        const parser = new RouteParser(removeTrailingSlash(route.path));
+        const match = parser.match(currentPath);
+        return match !== false;
+      }
+      for (let i = 0; i < route.routes.length; i++) {
+        const routeY = route.routes[i];
+        const fullPath = removeTrailingSlash(route.path + routeY.path);
 
-  const matchedRoute = createMemo(() => routes?.find(route => {
-    const currentPath = removeTrailingSlash(location.path());
-    if (!route.routes?.length) {
-      const parser = new RouteParser(removeTrailingSlash(route.path));
-      const match = parser.match(currentPath);
-      return match !== false;
-    }
-    for (let i = 0; i < route.routes.length; i++) {
-      const routeY = route.routes[i];
-      const fullPath = removeTrailingSlash(route.path + routeY.path);
-
-      const parser = new RouteParser(fullPath);
-      const match = parser.match(currentPath);
-      if (match !== false) return true;
-    }
-  }));
-
-
-  return (
-    <Show when={ready() && matchedRoute()}>
-      {matchedRoute()?.element}
-    </Show>
+        const parser = new RouteParser(fullPath);
+        const match = parser.match(currentPath);
+        if (match !== false) return true;
+      }
+    }),
   );
+
+  return <Show when={ready() && matchedRoute()}>{matchedRoute()?.element}</Show>;
 };
 
 export const Outlet = (props: { name?: string }) => {
@@ -187,9 +181,6 @@ export const Outlet = (props: { name?: string }) => {
     </>
   );
 };
-
-
-
 
 export function useNamedRoute<T = Record<string, any>>() {
   return namedRoute as { name?: string; params: T };

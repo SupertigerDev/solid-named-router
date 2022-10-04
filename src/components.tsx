@@ -1,4 +1,4 @@
-import { createComputed, createSignal, For, JSX, Show } from "solid-js";
+import { createComputed, createMemo, createSignal, JSX, Show } from "solid-js";
 import RouteParser from "route-parser";
 import { guardEvent, removeTrailingSlash } from "./utils";
 import { createStore, reconcile } from "solid-js/store";
@@ -114,13 +114,65 @@ export const createRouter = (opts: RouterOptions) => {
     location.setPath(window.location.pathname, false);
   };
 
-  return (props: { children: JSX.Element }) => <Show when={ready()}>{props.children}</Show>;
+  return (props: { children: JSX.Element }) => {
+
+    createComputed(() => {
+      if (!ready()) return;
+      for (let i = 0; i < routes!.length; i++) {
+        const route = routes![i];
+        if (!route.routes?.length) {
+          const parser = new RouteParser(removeTrailingSlash(route.path));
+          const match = parser.match(removeTrailingSlash(location.path()));
+          if (match !== false) {
+            setCurrentRoute(route);
+            return setNamedRoute(reconcile({ name: route.name, params: match }));
+          }
+          continue;
+        }
+        if (!route.routes?.length) continue;
+        for (let y = 0; y < route.routes.length; y++) {
+          const routeY = route.routes[y];
+          const fullPath = removeTrailingSlash(route.path + routeY.path);
+          const parser = new RouteParser(removeTrailingSlash(fullPath));
+          const match = parser.match(removeTrailingSlash(location.path()));
+          // console.log(match !== false, fullPath, location.path(), routeY.name)
+          if (match !== false) {
+            setCurrentRoute(routeY);
+            return setNamedRoute(reconcile({ name: routeY.name, params: match }));
+          }
+        }
+      }
+      setNamedRoute(reconcile({ params: {} }));
+    });
+
+
+    return <Show when={ready()}>{props.children}</Show>
+  };
 };
 
 export const RouterView = () => {
+
+  const matchedRoute = createMemo(() => routes?.find(route => {
+    const currentPath = removeTrailingSlash(location.path());
+    if (!route.routes?.length) {
+      const parser = new RouteParser(removeTrailingSlash(route.path));
+      const match = parser.match(currentPath);
+      return match !== false;
+    }
+    for (let i = 0; i < route.routes.length; i++) {
+      const routeY = route.routes[i];
+      const fullPath = removeTrailingSlash(route.path + routeY.path);
+
+      const parser = new RouteParser(fullPath);
+      const match = parser.match(currentPath);
+      if (match !== false) return true;
+    }
+  }));
+
+
   return (
-    <Show when={ready}>
-      <For each={routes}>{(route) => <Route route={route} />}</For>
+    <Show when={ready() && matchedRoute()}>
+      {matchedRoute()?.element}
     </Show>
   );
 };
@@ -136,34 +188,8 @@ export const Outlet = (props: { name?: string }) => {
   );
 };
 
-createComputed(() => {
-  if (!ready()) return;
-  for (let i = 0; i < routes!.length; i++) {
-    const route = routes![i];
-    if (!route.routes?.length) {
-      const parser = new RouteParser(removeTrailingSlash(route.path));
-      const match = parser.match(removeTrailingSlash(location.path()));
-      if (match !== false) {
-        setCurrentRoute(route);
-        return setNamedRoute(reconcile({ name: route.name, params: match }));
-      }
-      continue;
-    }
-    if (!route.routes?.length) continue;
-    for (let y = 0; y < route.routes.length; y++) {
-      const routeY = route.routes[y];
-      const fullPath = removeTrailingSlash(route.path + routeY.path);
-      const parser = new RouteParser(removeTrailingSlash(fullPath));
-      const match = parser.match(removeTrailingSlash(location.path()));
-      // console.log(match !== false, fullPath, location.path(), routeY.name)
-      if (match !== false) {
-        setCurrentRoute(routeY);
-        return setNamedRoute(reconcile({ name: routeY.name, params: match }));
-      }
-    }
-  }
-  setNamedRoute(reconcile({ params: {} }));
-});
+
+
 
 export function useNamedRoute<T = Record<string, any>>() {
   return namedRoute as { name?: string; params: T };
@@ -171,27 +197,6 @@ export function useNamedRoute<T = Record<string, any>>() {
 export function useParams<T = Record<string, any>>() {
   return namedRoute.params as T;
 }
-
-const Route = (props: { route: RouteOptions }) => {
-  const matches = () => {
-    const currentPath = removeTrailingSlash(location.path());
-    if (!props.route.routes?.length) {
-      const parser = new RouteParser(removeTrailingSlash(props.route.path));
-      const match = parser.match(currentPath);
-      return match !== false;
-    }
-    for (let i = 0; i < props.route.routes.length; i++) {
-      const route = props.route.routes[i];
-      const fullPath = removeTrailingSlash(props.route.path + route.path);
-
-      const parser = new RouteParser(fullPath);
-      const match = parser.match(currentPath);
-      if (match !== false) return true;
-    }
-  };
-
-  return <Show when={matches()}>{props.route.element}</Show>;
-};
 
 type LinkProps = {
   children?: JSX.Element;

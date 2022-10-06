@@ -1,11 +1,13 @@
 import { createComputed, createMemo, createSignal, JSX, Show } from "solid-js";
-import RouteParser from "route-parser";
+import * as RouteParser from "route-parser";
 import { guardEvent, removeTrailingSlash } from "./utils";
 import { createStore, reconcile } from "solid-js/store";
 
-type OneOf<T extends Record<string, unknown>> = {
-  [K in keyof T]: Record<K, T[K]> & { [U in Exclude<keyof T, K>]?: T[U] };
-}[keyof T];
+
+console.log(RouteParser);
+
+// const RouteParser = typeof RP === "function" ? RP : RP.Route;
+
 
 type RouteOptions = {
   name?: string;

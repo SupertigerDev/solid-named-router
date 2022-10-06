@@ -3,11 +3,9 @@ import * as RouteParser from "route-parser";
 import { guardEvent, removeTrailingSlash } from "./utils";
 import { createStore, reconcile } from "solid-js/store";
 
-
 console.log(RouteParser);
 
 // const RouteParser = typeof RP === "function" ? RP : RP.Route;
-
 
 type RouteOptions = {
   name?: string;

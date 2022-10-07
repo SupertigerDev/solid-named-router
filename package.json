@@ -1,5 +1,5 @@
 {
-  "version": "0.2.8",
+  "version": "0.2.9",
   "name": "solid-named-router",
   "description": "A third party router library for solidjs.",
   "license": "MIT",

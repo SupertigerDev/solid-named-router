@@ -204,8 +204,8 @@ export function useParams<T = Record<string, any>>() {
 type LinkProps = {
   children?: JSX.Element;
   onClick?: (event: MouseEvent) => void;
-  class: string;
-  style: string | JSX.CSSProperties | undefined;
+  class?: string;
+  style?: string | JSX.CSSProperties | undefined;
 } & ({ to: string } | { to: { name: string; params?: Record<string, any> } });
 
 export const Link = (props: LinkProps) => {

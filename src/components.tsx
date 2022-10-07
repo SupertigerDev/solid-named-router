@@ -1,8 +1,7 @@
 import { createComputed, createMemo, createSignal, JSX, Show } from "solid-js";
-import {Route as RouteParser} from "@supertiger/route-parser";
+import { Route as RouteParser } from "@supertiger/route-parser";
 import { guardEvent, removeTrailingSlash } from "./utils";
 import { createStore, reconcile } from "solid-js/store";
-
 
 type RouteOptions = {
   name?: string;
@@ -15,7 +14,6 @@ type RouteOptions = {
 interface RouterOptions {
   routes: RouteOptions[];
 }
-
 
 const createLocation = () => {
   const [path, setPath] = createSignal(window.location.pathname);
@@ -30,19 +28,18 @@ const createLocation = () => {
 };
 const location = createLocation();
 
-
-const [namedRoute, setNamedRoute] = createStore<{ name?: string; params: Record<string, any>, pathname: string }>({
+const [namedRoute, setNamedRoute] = createStore<{
+  name?: string;
+  params: Record<string, any>;
+  pathname: string;
+}>({
   params: {},
   get pathname() {
     return location.path();
-  }
+  },
 });
 
-
-
 const [currentRoute, setCurrentRoute] = createSignal<null | RouteOptions>(null);
-
-
 
 const createNamedRoutes = () => {
   let namedRoutes: Record<string, string> = {};
@@ -130,9 +127,15 @@ export const createRouter = (opts: RouterOptions) => {
           const match = parser.match(removeTrailingSlash(location.path()));
           if (match !== false) {
             setCurrentRoute(route);
-            return setNamedRoute(reconcile({ name: route.name, params: match,   get pathname() {
-              return location.path();
-            } }));
+            return setNamedRoute(
+              reconcile({
+                name: route.name,
+                params: match,
+                get pathname() {
+                  return location.path();
+                },
+              }),
+            );
           }
           continue;
         }
@@ -145,15 +148,26 @@ export const createRouter = (opts: RouterOptions) => {
           // console.log(match !== false, fullPath, location.path(), routeY.name)
           if (match !== false) {
             setCurrentRoute(routeY);
-            return setNamedRoute(reconcile({ name: routeY.name, params: match,   get pathname() {
-              return location.path();
-            } }));
+            return setNamedRoute(
+              reconcile({
+                name: routeY.name,
+                params: match,
+                get pathname() {
+                  return location.path();
+                },
+              }),
+            );
           }
         }
       }
-      setNamedRoute(reconcile({ params: {},   get pathname() {
-        return location.path();
-      } }));
+      setNamedRoute(
+        reconcile({
+          params: {},
+          get pathname() {
+            return location.path();
+          },
+        }),
+      );
     });
 
     return <Show when={ready()}>{props.children}</Show>;
@@ -195,7 +209,7 @@ export const Outlet = (props: { name?: string }) => {
 };
 
 export function useNamedRoute<T = Record<string, any>>() {
-  return namedRoute as { name?: string; params: T, pathname: string; };
+  return namedRoute as { name?: string; params: T; pathname: string };
 }
 export function useParams<T = Record<string, any>>() {
   return namedRoute.params as T;

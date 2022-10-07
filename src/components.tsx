@@ -4,7 +4,6 @@ import { guardEvent, removeTrailingSlash } from "./utils";
 import { createStore, reconcile } from "solid-js/store";
 
 
-
 type RouteOptions = {
   name?: string;
   path: string;
@@ -16,8 +15,6 @@ type RouteOptions = {
 interface RouterOptions {
   routes: RouteOptions[];
 }
-
-
 
 
 const createLocation = () => {

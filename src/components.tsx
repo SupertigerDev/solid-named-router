@@ -195,7 +195,7 @@ export const Outlet = (props: { name?: string }) => {
 };
 
 export function useNamedRoute<T = Record<string, any>>() {
-  return namedRoute as { name?: string; params: T };
+  return namedRoute as { name?: string; params: T, pathname: string; };
 }
 export function useParams<T = Record<string, any>>() {
   return namedRoute.params as T;
@@ -204,6 +204,8 @@ export function useParams<T = Record<string, any>>() {
 type LinkProps = {
   children?: JSX.Element;
   onClick?: (event: MouseEvent) => void;
+  class: string;
+  style: string | JSX.CSSProperties | undefined;
 } & ({ to: string } | { to: { name: string; params?: Record<string, any> } });
 
 export const Link = (props: LinkProps) => {

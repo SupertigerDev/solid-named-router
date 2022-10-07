@@ -7,7 +7,7 @@
 [![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-cc00ff.svg?style=for-the-badge&logo=pnpm)](https://pnpm.io/)
 
 A third party router library for solidjs. Includes named routes inspired by vuejs.   
-This router relies on the [route-parser](https://www.npmjs.com/package/route-parser) package.   
+This router relies on the [route-parser](https://github.com/Supertigerr/route-parser) package.   
 Note: This library is not complete. Please contribute and submit PRs to improve this library 💖
 
 ## Quick start
@@ -77,11 +77,12 @@ navigate('app/users/1234')
 
 ### useNamedRoute
 ```ts
-const namedRoute = useNamedRoute(); // -> {name, params};
+const namedRoute = useNamedRoute(); // -> {name, params, pathname};
 
 <div>
   <div>name: {namedRoute.name}</div>
   <div>params: {namedRoute.params.userId}</div>
+  <div>params: {namedRoute.pathname}</div>
 </div>
 ```
 ### useParams

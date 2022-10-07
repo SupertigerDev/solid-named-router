@@ -1,12 +1,8 @@
 import { createComputed, createMemo, createSignal, JSX, Show } from "solid-js";
-import * as RouteParser from "route-parser";
+import {Route as RouteParser} from "@supertiger/route-parser";
 import { guardEvent, removeTrailingSlash } from "./utils";
 import { createStore, reconcile } from "solid-js/store";
 
-
-console.log(RouteParser);
-
-// const RouteParser = typeof RP === "function" ? RP : RP.Route;
 
 
 type RouteOptions = {
@@ -21,11 +17,8 @@ interface RouterOptions {
   routes: RouteOptions[];
 }
 
-const [namedRoute, setNamedRoute] = createStore<{ name?: string; params: Record<string, any> }>({
-  params: {},
-});
 
-const [currentRoute, setCurrentRoute] = createSignal<null | RouteOptions>(null);
+
 
 const createLocation = () => {
   const [path, setPath] = createSignal(window.location.pathname);
@@ -38,6 +31,21 @@ const createLocation = () => {
 
   return { setPath: set, path };
 };
+const location = createLocation();
+
+
+const [namedRoute, setNamedRoute] = createStore<{ name?: string; params: Record<string, any>, pathname: string }>({
+  params: {},
+  get pathname() {
+    return location.path();
+  }
+});
+
+
+
+const [currentRoute, setCurrentRoute] = createSignal<null | RouteOptions>(null);
+
+
 
 const createNamedRoutes = () => {
   let namedRoutes: Record<string, string> = {};
@@ -89,7 +97,6 @@ const createNamedRoutes = () => {
 
   return { setRoutes, getRoute, removeAll, parse };
 };
-const location = createLocation();
 const namedRoutes = createNamedRoutes();
 let routes: RouteOptions[] | null = null;
 const [ready, setReady] = createSignal<boolean>(false);
@@ -126,7 +133,9 @@ export const createRouter = (opts: RouterOptions) => {
           const match = parser.match(removeTrailingSlash(location.path()));
           if (match !== false) {
             setCurrentRoute(route);
-            return setNamedRoute(reconcile({ name: route.name, params: match }));
+            return setNamedRoute(reconcile({ name: route.name, params: match,   get pathname() {
+              return location.path();
+            } }));
           }
           continue;
         }
@@ -139,11 +148,15 @@ export const createRouter = (opts: RouterOptions) => {
           // console.log(match !== false, fullPath, location.path(), routeY.name)
           if (match !== false) {
             setCurrentRoute(routeY);
-            return setNamedRoute(reconcile({ name: routeY.name, params: match }));
+            return setNamedRoute(reconcile({ name: routeY.name, params: match,   get pathname() {
+              return location.path();
+            } }));
           }
         }
       }
-      setNamedRoute(reconcile({ params: {} }));
+      setNamedRoute(reconcile({ params: {},   get pathname() {
+        return location.path();
+      } }));
     });
 
     return <Show when={ready()}>{props.children}</Show>;

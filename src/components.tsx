@@ -3,7 +3,6 @@ import { Route as RouteParser } from "@supertiger/route-parser";
 import { guardEvent, removeTrailingSlash } from "./utils";
 import { createStore, reconcile } from "solid-js/store";
 
-
 type RouteOptions = {
   name?: string;
   path: string;
@@ -15,7 +14,6 @@ type RouteOptions = {
 interface RouterOptions {
   routes: RouteOptions[];
 }
-
 
 const createLocation = () => {
   const [path, setPath] = createSignal(window.location.pathname);
@@ -44,11 +42,7 @@ const [namedRoute, setNamedRoute] = createStore<{ name?: string; params: Record<
   }
 });
 
-
-
 const [currentRoute, setCurrentRoute] = createSignal<null | RouteOptions>(null);
-
-
 
 const createNamedRoutes = () => {
   let namedRoutes: Record<string, string> = {};

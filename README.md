@@ -66,18 +66,18 @@ const App = () => {
 ## Methods & Hooks
 ### Link
 ```tsx
-<Link to={{name: 'Users', params: {userId: 1234}}}>User</Link>
+<Link to={{name: 'Users', params: {userId: 1234}, query: {hideInfo: "1"}}}>User</Link>
 <Link to='app/users/1234'>User</Link>
 ```
 ### navigate
 ```ts
-navigate({name: 'Users', params: {userId: 1234}})
+navigate({name: 'Users', params: {userId: 1234}, query: {hideInfo: "1"}})
 navigate('app/users/1234')
 ```
 
 ### useNamedRoute
 ```ts
-const namedRoute = useNamedRoute(); // -> {name, params, pathname};
+const namedRoute = useNamedRoute(); // -> {name, params, pathname, query};
 
 <div>
   <div>name: {namedRoute.name}</div>

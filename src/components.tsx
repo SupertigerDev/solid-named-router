@@ -1,5 +1,5 @@
 import { createComputed, createMemo, createSignal, JSX, Show } from "solid-js";
-import {Route as RouteParser} from "@supertiger/route-parser";
+import { Route as RouteParser } from "@supertiger/route-parser";
 import { guardEvent, removeTrailingSlash } from "./utils";
 import { createStore, reconcile } from "solid-js/store";
 
@@ -19,22 +19,28 @@ interface RouterOptions {
 
 const createLocation = () => {
   const [path, setPath] = createSignal(window.location.pathname);
+  const [query, setQuery] = createStore(urlToQueryObject(window.location.href));
 
   const set = (_path: string, pushState = true) => {
-    if (path() === _path) return;
-    setPath(_path);
+    setQuery(reconcile(urlToQueryObject(_path)));
+    const beforePath = window.location.pathname + window.location.search;
+    if (beforePath === _path) return;
     pushState && window.history.pushState(history.state, "", _path);
+    setPath(urlToPathname(_path));
   };
 
-  return { setPath: set, path };
+  return { setPath: set, path, query };
 };
 const location = createLocation();
 
 
-const [namedRoute, setNamedRoute] = createStore<{ name?: string; params: Record<string, any>, pathname: string }>({
+const [namedRoute, setNamedRoute] = createStore<{ name?: string; params: Record<string, any>, pathname: string, query: Record<string, any> }>({
   params: {},
   get pathname() {
     return location.path();
+  },
+  get query() {
+    return location.query
   }
 });
 
@@ -100,14 +106,21 @@ const [ready, setReady] = createSignal<boolean>(false);
 
 type NavigateOverloads = {
   (path: string): void;
-  (opts: { name: string; params?: Record<string, any> }): void;
+  (opts: { name: string; params?: Record<string, any>, query?: Record<string, any> }): void;
 };
 
 export const navigate: NavigateOverloads = (opts: any) => {
-  const path = namedRoutes.parse(opts);
+  let path = namedRoutes.parse(opts);
   if (path === false) {
     throw new Error("Invalid path");
   }
+
+  const queryObj = opts.query;
+  const query = queryObj ? setUrlQueries(path, queryObj) : false
+  if (query) {
+    path = path + query;
+  }
+
   location.setPath(path);
 };
 
@@ -117,7 +130,7 @@ export const createRouter = (opts: RouterOptions) => {
   setReady(true);
 
   window.onpopstate = function (e) {
-    location.setPath(window.location.pathname, false);
+    location.setPath(window.location.href, false);
   };
 
   return (props: { children: JSX.Element }) => {
@@ -130,9 +143,15 @@ export const createRouter = (opts: RouterOptions) => {
           const match = parser.match(removeTrailingSlash(location.path()));
           if (match !== false) {
             setCurrentRoute(route);
-            return setNamedRoute(reconcile({ name: route.name, params: match,   get pathname() {
-              return location.path();
-            } }));
+            return setNamedRoute(reconcile({
+              name: route.name, params: match,
+              get pathname() {
+                return location.path();
+              },
+              get query() {
+                return location.query
+              }
+            }));
           }
           continue;
         }
@@ -142,18 +161,30 @@ export const createRouter = (opts: RouterOptions) => {
           const fullPath = removeTrailingSlash(route.path + routeY.path);
           const parser = new RouteParser(removeTrailingSlash(fullPath));
           const match = parser.match(removeTrailingSlash(location.path()));
-          // console.log(match !== false, fullPath, location.path(), routeY.name)
+
           if (match !== false) {
             setCurrentRoute(routeY);
-            return setNamedRoute(reconcile({ name: routeY.name, params: match,   get pathname() {
-              return location.path();
-            } }));
+            return setNamedRoute(reconcile({
+              name: routeY.name, params: match,
+              get pathname() {
+                return location.path();
+              },
+              get query() {
+                return location.query
+              }
+            }));
           }
         }
       }
-      setNamedRoute(reconcile({ params: {},   get pathname() {
-        return location.path();
-      } }));
+      setNamedRoute(reconcile({
+        params: {},
+        get pathname() {
+          return location.path();
+        },
+        get query() {
+          return location.query
+        }
+      }));
     });
 
     return <Show when={ready()}>{props.children}</Show>;
@@ -194,11 +225,14 @@ export const Outlet = (props: { name?: string }) => {
   );
 };
 
-export function useNamedRoute<T = Record<string, any>>() {
-  return namedRoute as { name?: string; params: T, pathname: string; };
+export function useNamedRoute() {
+  return namedRoute as { name?: string; params: Record<string, any>, query: Record<string, any>, pathname: string; };
 }
 export function useParams<T = Record<string, any>>() {
   return namedRoute.params as T;
+}
+export function useQuery<T = Record<string, any>>() {
+  return namedRoute.query as T;
 }
 
 type LinkProps = {
@@ -206,11 +240,19 @@ type LinkProps = {
   onClick?: (event: MouseEvent) => void;
   class?: string;
   style?: string | JSX.CSSProperties | undefined;
-} & ({ to: string } | { to: { name: string; params?: Record<string, any> } });
+
+} & ({ to: string } | { to: { name: string; params?: Record<string, any>, query?: Record<string, any> } });
 
 export const Link = (props: LinkProps) => {
   const path = () => {
-    return namedRoutes.parse(props.to as any);
+    let partialPath = namedRoutes.parse(props.to as any);
+    if (!partialPath) return partialPath;
+    const queryObj = (props.to as any).query;
+    const query = queryObj ? setUrlQueries(partialPath, queryObj) : false
+    if (query) {
+      partialPath = partialPath + query;
+    }
+    return partialPath
   };
   if (path() === false) {
     throw new Error("Invalid Link path");
@@ -224,3 +266,24 @@ export const Link = (props: LinkProps) => {
   };
   return <a {...{ ...(props as any), onClick, to: undefined }} href={path()} />;
 };
+
+
+function setUrlQueries(path: string, query: Record<string, any>) {
+  const url = new URL(path.startsWith("/") ? "http://uwu.uwu" + path : path);
+  for (let key in query) {
+    const value = query[key];
+    url.searchParams.set(key, value.toString());
+  }
+  return url.search;
+}
+
+function urlToQueryObject(path: string) {
+  const url = new URL(path.startsWith("/") ? "http://uwu.uwu" + path : path);
+  return Object.fromEntries(url.searchParams);
+}
+
+
+function urlToPathname(path: string) {
+  const url = new URL(path.startsWith("/") ? "http://uwu.uwu" + path : path);
+  return url.pathname;
+}

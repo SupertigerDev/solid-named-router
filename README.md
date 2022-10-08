@@ -7,7 +7,7 @@
 [![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-cc00ff.svg?style=for-the-badge&logo=pnpm)](https://pnpm.io/)
 
 A third party router library for solidjs. Includes named routes inspired by vuejs.   
-This router relies on the [route-parser](https://github.com/Supertigerr/route-parser) package.   
+This router relies on the [route-parser](https://github.com/Unnamed-Chat-App/route-parser) package.   
 Note: This library is not complete. Please contribute and submit PRs to improve this library 💖
 
 ## Quick start

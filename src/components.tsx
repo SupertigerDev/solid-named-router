@@ -23,9 +23,9 @@ const createLocation = () => {
     setQuery(reconcile(urlToQueryObject(_path)));
     const beforePath = window.location.pathname + window.location.search;
     if (beforePath === _path) return;
-    setPath(urlToPathname(_path));
     (pushState && !replaceState) && window.history.pushState(history.state, "", _path);
     replaceState && window.history.replaceState(history.state, "", _path);
+    setPath(urlToPathname(_path));
   };
 
   return { setPath: set, path, query };

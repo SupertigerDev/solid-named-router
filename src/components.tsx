@@ -209,13 +209,9 @@ export function useNamedRoute() {
   return namedRoute as { name?: string; params: Record<string, any>, query: Record<string, any>, pathname: string; };
 }
 
-const p = createMemo(() => {
-  const route = useNamedRoute();
-  return route.params;
-})
 
 export function useParams<T = Record<string, any>>() {
-  return p();
+  return params as T;
 }
 export function useQuery<T = Record<string, any>>() {
   return namedRoute.query as T;

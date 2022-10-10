@@ -24,7 +24,7 @@ const createLocation = () => {
     const beforePath = window.location.pathname + window.location.search;
     if (beforePath === _path) return;
     setPath(urlToPathname(_path));
-    pushState && window.history.pushState(history.state, "", _path);
+    (pushState && !replaceState) && window.history.pushState(history.state, "", _path);
     replaceState && window.history.replaceState(history.state, "", _path);
   };
 

@@ -1,4 +1,4 @@
-import { createComputed, createMemo, createSignal, JSX, Show } from "solid-js";
+import { createComputed, createMemo, createSignal, JSX, Show, VoidProps } from "solid-js";
 import { Route as RouteParser } from "@supertiger/route-parser";
 import { guardEvent, removeTrailingSlash } from "./utils";
 import { createStore, reconcile } from "solid-js/store";
@@ -224,6 +224,7 @@ export function useQuery<T = Record<string, any>>() {
 type LinkProps = {
   children?: JSX.Element;
   onClick?: (event: MouseEvent) => void;
+  onContextMenu?: (event: MouseEvent) => void;
   class?: string;
   style?: string | JSX.CSSProperties | undefined;
 

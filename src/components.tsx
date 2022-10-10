@@ -19,12 +19,13 @@ const createLocation = () => {
   const [path, setPath] = createSignal(window.location.pathname);
   const [query, setQuery] = createStore(urlToQueryObject(window.location.href));
 
-  const set = (_path: string, pushState = true) => {
+  const set = (_path: string, pushState = true, replaceState = false) => {
     setQuery(reconcile(urlToQueryObject(_path)));
     const beforePath = window.location.pathname + window.location.search;
     if (beforePath === _path) return;
     setPath(urlToPathname(_path));
     pushState && window.history.pushState(history.state, "", _path);
+    replaceState && window.history.replaceState(history.state, "", _path);
   };
 
   return { setPath: set, path, query };
@@ -101,24 +102,28 @@ const namedRoutes = createNamedRoutes();
 let routes: RouteOptions[] | null = null;
 const [ready, setReady] = createSignal<boolean>(false);
 
+interface navigateOptions {
+  replace?: boolean
+}
+
 type NavigateOverloads = {
-  (path: string): void;
-  (opts: { name: string; params?: Record<string, any>, query?: Record<string, any> }): void;
+  (path: string, options?: navigateOptions): void;
+  (to: { name: string; params?: Record<string, any>, query?: Record<string, any>, options?: navigateOptions }): void;
 };
 
-export const navigate: NavigateOverloads = (opts: any) => {
-  let path = namedRoutes.parse(opts);
+export const navigate: NavigateOverloads = (to: any, opts?: navigateOptions) => {
+  let path = namedRoutes.parse(to);
   if (path === false) {
     throw new Error("Invalid path");
   }
 
-  const queryObj = opts.query;
+  const queryObj = to.query;
   const query = queryObj ? setUrlQueries(path, queryObj) : false
   if (query) {
     path = path + query;
   }
 
-  location.setPath(path);
+  location.setPath(path, true, opts?.replace);
 };
 
 export const createRouter = (opts: RouterOptions) => {

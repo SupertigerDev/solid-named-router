@@ -31,9 +31,12 @@ const createLocation = () => {
 };
 const location = createLocation();
 
+const [params, setParams] = createStore<Record<string, any>>({});
 
 const [namedRoute, setNamedRoute] = createStore<{ name?: string; params: Record<string, any>, pathname: string, query: Record<string, any> }>({
-  params: {},
+  get params() {
+    return params;
+  },
   get pathname() {
     return location.path();
   },
@@ -137,15 +140,8 @@ export const createRouter = (opts: RouterOptions) => {
           const match = parser.match(removeTrailingSlash(location.path()));
           if (match !== false) {
             setCurrentRoute(route);
-            return setNamedRoute(reconcile({
-              name: route.name, params: match,
-              get pathname() {
-                return location.path();
-              },
-              get query() {
-                return location.query
-              }
-            }));
+            setParams(match);
+            return setNamedRoute('name', reconcile(route.name));
           }
           continue;
         }
@@ -158,27 +154,12 @@ export const createRouter = (opts: RouterOptions) => {
 
           if (match !== false) {
             setCurrentRoute(routeY);
-            return setNamedRoute(reconcile({
-              name: routeY.name, params: match,
-              get pathname() {
-                return location.path();
-              },
-              get query() {
-                return location.query
-              }
-            }));
+            setParams(reconcile(match))
+            return setNamedRoute('name', reconcile(routeY.name));
           }
         }
       }
-      setNamedRoute(reconcile({
-        params: {},
-        get pathname() {
-          return location.path();
-        },
-        get query() {
-          return location.query
-        }
-      }));
+      setParams(reconcile({}));
     });
 
     return <Show when={ready()}>{props.children}</Show>;
@@ -222,8 +203,14 @@ export const Outlet = (props: { name?: string }) => {
 export function useNamedRoute() {
   return namedRoute as { name?: string; params: Record<string, any>, query: Record<string, any>, pathname: string; };
 }
+
+const p = createMemo(() => {
+  const route = useNamedRoute();
+  return route.params;
+})
+
 export function useParams<T = Record<string, any>>() {
-  return namedRoute.params as T;
+  return p();
 }
 export function useQuery<T = Record<string, any>>() {
   return namedRoute.query as T;

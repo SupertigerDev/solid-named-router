@@ -11,8 +11,11 @@ type RouteOptions = {
   routes?: Omit<RouteOptions, "routes">[];
 };
 
+type NotFoundOptions = Omit<RouteOptions, "path">;
+
 interface RouterOptions {
   routes: RouteOptions[];
+  notFound?: NotFoundOptions;
 }
 
 const createLocation = () => {
@@ -100,6 +103,7 @@ const createNamedRoutes = () => {
 };
 const namedRoutes = createNamedRoutes();
 let routes: RouteOptions[] | null = null;
+let notFound: NotFoundOptions | null = null;
 const [ready, setReady] = createSignal<boolean>(false);
 
 interface navigateOptions {
@@ -128,6 +132,7 @@ export const navigate: NavigateOverloads = (to: any, opts?: navigateOptions) => 
 
 export const createRouter = (opts: RouterOptions) => {
   routes = opts.routes;
+  notFound = opts.notFound;
   namedRoutes.setRoutes(opts.routes);
   setReady(true);
 
@@ -188,7 +193,7 @@ export const RouterView = () => {
         const match = parser.match(currentPath);
         if (match !== false) return true;
       }
-    }),
+    }) ?? notFound,
   );
 
   return <Show when={ready() && matchedRoute()}>{matchedRoute()?.element}</Show>;

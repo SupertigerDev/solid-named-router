@@ -27,6 +27,10 @@ const Router = createRouter({
       ],
     },
   ],
+  notFound: {
+    name: "NotFound",
+    element: () => <div>Not Found</div>,
+  },
 });
 
 const MainApp = () => {

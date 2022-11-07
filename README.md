@@ -10,6 +10,9 @@ A third party router library for solidjs. Includes named routes inspired by vuej
 This router relies on the [route-parser](https://github.com/Unnamed-Chat-App/route-parser) package.   
 Note: This library is not complete. Please contribute and submit PRs to improve this library 💖
 
+## What this fork changes
+* Added `end` option to `useMatch` method.
+
 ## Quick start
 
 Install it:
